@@ -2,7 +2,7 @@ import feedparser
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import time
 
 # RSS feed URL mapping to course names
@@ -56,8 +56,10 @@ def check_feed(feed_url, course_name):
         post_id = entry.id
             
         # Parse the pubDate and calculate the time difference
-        pub_date = datetime.strptime(entry.published, '%a, %d %b %Y %H:%M:%S %Z')
-        time_difference = datetime.utcnow() - pub_date
+        pub_date = datetime.strptime(entry.published, '%a, %d %b %Y %H:%M:%S %z')
+        
+        # Use timezone-aware current time in UTC
+        time_difference = datetime.now(timezone.utc) - pub_date
         
         # Skip if the entry was published more than 5 hours ago
         if time_difference > timedelta(hours=5):

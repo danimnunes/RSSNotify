@@ -1,4 +1,4 @@
-# IST Notifier
+# RSSNotify
 
 This project is an automated RSS feed notifier that sends email updates whenever a new post is published in specified RSS feeds. It uses SendGrid to send emails and GitHub Actions to run the script every 3 hours.(you can change this) 
 

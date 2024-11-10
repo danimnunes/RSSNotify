@@ -2,6 +2,7 @@ import feedparser
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 import os
+from datetime import datetime, timedelta
 import time
 
 # RSS feed URL mapping to course names

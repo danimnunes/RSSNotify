@@ -47,21 +47,34 @@ def send_email(subject, content):
         print("Error sending email:", e)
 
 def check_feed(feed_url, course_name):
+    # Load previously seen posts
     seen_posts = load_seen_posts()
     feed = feedparser.parse(feed_url)
     
     for entry in feed.entries:
         post_id = entry.id
-        if post_id not in seen_posts:
-            save_seen_post(post_id)
+            
+        # Parse the pubDate and calculate the time difference
+        pub_date = datetime.strptime(entry.published, '%a, %d %b %Y %H:%M:%S %Z')
+        time_difference = datetime.utcnow() - pub_date
+        
+        # Skip if the entry was published more than 5 hours ago
+        if time_difference > timedelta(hours=5):
+            continue
+        # Skip if already seen
+        if post_id in seen_posts:
+            continue
 
-            # Create a dynamic subject using the entry's title and timestamp for uniqueness
-            timestamp = time.strftime('%Y-%m-%d %H:%M:%S')  # Format the current time
-            subject = f"IST - {course_name} Announcement: {entry.title} ({timestamp})"
-            content = f"<p>{entry.description}</p><p><a href='{entry.link}'>Read more</a></p>"
+        # Save the post as seen
+        save_seen_post(post_id)
 
-            # Send email
-            send_email(subject, content)
+        # Create a dynamic subject using the entry's title and timestamp for uniqueness
+        timestamp = time.strftime('%Y-%m-%d %H:%M:%S')  # Format the current time
+        subject = f"IST - {course_name} Announcement: {entry.title} ({timestamp})"
+        content = f"<p>{entry.description}</p><p><a href='{entry.link}'>Read more</a></p>"
+
+        # Send email
+        send_email(subject, content)
 
 if __name__ == "__main__":
     for url, course_name in RSS_FEED_URLS.items():

@@ -67,17 +67,17 @@ This will allow you to have different subjects for each feed.
 
 Create .github/workflows/rss_notifier.yml file that configures GitHub Actions to run the notifier script on a schedule.
 
-Create .github/workflows/rss_notifier.yml.
-Modify the cron schedule under on: schedule if necessary.
-For example, to run the script every 15 minutes, set the cron schedule as:
 
 ```yaml
 name: RSS Feed Notifier
 
 on:
   schedule:
-    - cron: "0 */3 * * *"  # Runs every 3 hours
+    - cron: "*/30 * * * *"  # Runs every 30 minutes
   workflow_dispatch:  # Allows manual trigger
+
+permissions:
+  contents: write  # Grants read and write permissions for repository contents
 
 jobs:
   check_rss_feed:
@@ -85,7 +85,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true  # Ensures credentials are available for pushing changes
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -102,7 +104,33 @@ jobs:
           RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
         run: python rss_notifier.py
 
+      - name: Upload seen posts
+        uses: actions/upload-artifact@v3
+        with:
+          name: seen_posts
+          path: seen_posts.txt
+          if-no-files-found: warn
+
+      - name: Commit and push updates to seen_posts.txt (if changes detected)
+        run: |
+          # Check if there are changes to seen_posts.txt
+          git diff --exit-code seen_posts.txt || (git config --global user.email "github-actions[bot]@users.noreply.github.com" && git config --global user.name "github-actions[bot]" && git add seen_posts.txt && git commit -m "Update seen_posts.txt with new entries" && git push)
+
+
 ```
+- In the YAML file:
+
+The cron schedule defines that the workflow will run every 30 minutes. You can adjust this as needed.
+
+The workflow checks for new RSS posts, sends email notifications, and uploads the seen_posts.txt file as an artifact.
+
+It will commit and push the seen_posts.txt file only if there are new entries to be added, skipping the commit if no changes are detected.
+
+
+- Configure GitHub Actions Permissions:
+
+Ensure that the GitHub Actions workflow has the necessary permissions to commit and push changes back to the repository. In this YAML file, the contents: write permission is enabled to allow GitHub Actions to commit changes to seen_posts.txt.
+
 If you want to run it manually, you can trigger the workflow by clicking Run workflow in the Actions tab on GitHub.
 
 ### Step 7: Test the Setup

@@ -71,10 +71,13 @@ def check_feed(feed_url, course_name):
         # Save the post as seen
         save_seen_post(post_id)
 
+        # Get the author, if available
+        author = entry.get("author", "No author specified")
+        
         # Create a dynamic subject using the entry's title and timestamp for uniqueness
-        timestamp = time.strftime('%Y-%m-%d %H:%M:%S')  # Format the current time
+        timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
         subject = f"IST - {course_name} Announcement: {entry.title} ({timestamp})"
-        content = f"<p>{entry.description}</p><p><a href='{entry.link}'>Read more</a></p>"
+        content = f"<p><strong>Author:</strong> {author}</p><p>{entry.description}</p><p><a href='{entry.link}'>Read more</a></p>"
 
         # Send email
         send_email(subject, content)
